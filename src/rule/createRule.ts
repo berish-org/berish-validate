@@ -52,7 +52,7 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
             if (isRuleFlag(result)) {
               if (result === FLAG_CONDITION_TRUTHY) return FLAG_CONDITION_FALSY;
               if (result === FLAG_CONDITION_FALSY) return FLAG_CONDITION_TRUTHY;
-              return result;
+              return FLAG_CONDITION_TRUTHY;
             }
             return !result;
           },
@@ -62,7 +62,7 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
             if (isRuleFlag(result)) {
               if (result === FLAG_CONDITION_TRUTHY) return FLAG_CONDITION_FALSY;
               if (result === FLAG_CONDITION_FALSY) return FLAG_CONDITION_TRUTHY;
-              return result;
+              return FLAG_CONDITION_TRUTHY;
             }
             return !result;
           },
