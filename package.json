@@ -1,6 +1,6 @@
 {
   "name": "@berish/validate",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Validation of complex objects with support for validation maps, rules and decorators",
   "main": "build/index.js",
   "typings": "build/index.d.ts",
