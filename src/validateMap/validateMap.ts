@@ -10,7 +10,7 @@ export type RuleMapType<T> = {
   [Key in keyof T]?: ValidateMap<T[Key]>;
 };
 export type RuleTupleType<T> = [RuleArrayType, RuleMapType<T>];
-export type ValidateMap<T> = T extends object ? RuleArrayType | RuleMapType<T> | RuleTupleType<T> : RuleArrayType;
+export type ValidateMap<T> = RuleArrayType | RuleMapType<T> | RuleTupleType<T>;
 
 export interface IValidationRuleResult {
   name: string;
