@@ -1,6 +1,6 @@
 import { IRulePlugin } from './abstract';
-import { IValidateRule, IRuleErrorTextResult } from '../rule';
-import * as globalModule from '../globalModule';
+import { IValidateRule } from '../rule';
+import * as globalMethodsImport from '../index';
 
 export function useUpgradeRuleBeforeInit(plugin: IRulePlugin, rule: IValidateRule<any>) {
   try {
@@ -18,13 +18,16 @@ export function useUpgradeRuleAfterInit(plugin: IRulePlugin, rule: IValidateRule
   }
 }
 
-export function useUpgradeGlobalModule(plugin: IRulePlugin, module: typeof globalModule) {
+export function useUpgradeMethods(plugin: IRulePlugin, globalMethods: typeof globalMethodsImport) {
   try {
-    const newModule = (plugin && plugin.upgradeGlobalModule && plugin.upgradeGlobalModule(module)) || module;
-    if (newModule !== module)
-      Object.entries(newModule).forEach(([key, value]) => Object.defineProperty(module, key, { value }));
-    return module;
+    const newGlobalMethods = (plugin && plugin.upgradeMethods && plugin.upgradeMethods(globalMethods)) || globalMethods;
+    if (newGlobalMethods !== globalMethods)
+      Object.entries(newGlobalMethods).forEach(
+        ([key, value]) =>
+          typeof globalMethods[key] === 'undefined' && Object.defineProperty(globalMethods, key, { value }),
+      );
+    return globalMethods;
   } catch (err) {
-    return module;
+    return globalMethods;
   }
 }

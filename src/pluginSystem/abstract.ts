@@ -1,10 +1,12 @@
 import { IValidateRule, IRuleErrorTextResult } from '../rule';
-import * as globalModule from '../globalModule';
+import * as globalMethodsImport from '../index';
 
 export interface IRulePlugin {
   upgradeRuleBeforeInit?(rule: IValidateRule<any>): IValidateRule<any> | void;
   upgradeRuleAfterInit?(rule: IValidateRule<any>): IValidateRule<any> | void;
-  upgradeGlobalModule?(module: typeof globalModule): typeof globalModule | { [key: string]: any } | void;
+  upgradeMethods?(
+    globalMethods: typeof globalMethodsImport,
+  ): typeof globalMethodsImport | { [key: string]: any } | void;
 }
 
 export interface IRulePluginDefault<PluginParams> extends IRulePlugin {
