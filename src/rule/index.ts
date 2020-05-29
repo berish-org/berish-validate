@@ -7,6 +7,8 @@ export * from './isRule';
 export * from './isRuleArray';
 export * from './isRuleFlag';
 export * from './isRuleMap';
+export * from './isRuleReference';
+export * from './isRuleReferenceTuple';
 export * from './isRuleTuple';
 export * from './registrator';
 export * from './types';

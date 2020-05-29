@@ -189,12 +189,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@berish/linq@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@berish/linq/-/linq-1.0.5.tgz#435a2cf97080fe5c166bc51269bf22642f29d8a7"
-  integrity sha512-uvzva+8kisGy9ZK0vCnE4v/OqNvVgbL2czrU0qb7X94itZQH747ygNaJh915bMobIc1bZUSW/kZ2BMCOiFI6cg==
-  dependencies:
-    berish-collection "^2.0.1"
+"@berish/linq@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@berish/linq/-/linq-1.1.0.tgz#da62d357b65bbd0f3c0bd2aa930d21b6bb05568a"
+  integrity sha512-KKwyulTigMpPudw/wptGx9oJvaH9yYB7ulxm6GMytAJUqvcYufrBcOF5jpe1Gqw4o1EYLKcN2/1NR+jxhtBOmQ==
 
 "@berish/pathof@^1.1.0":
   version "1.1.0"

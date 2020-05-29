@@ -1,7 +1,12 @@
-import { createRule, isRule, isRuleArray, isRuleTuple, isRuleMap, isRegisteredRule } from '../rule';
-import { isValidateMap } from '../validateMap/isValidateMap';
-import { getRulesFromMap } from '../validateMap/getRulesFromMap';
-import { validateMapSync } from '../validateMap/validateMap';
+import { createRule, isRule, isRuleArray, isRuleTuple, isRuleMap, isRegisteredRule, createSimpleRule } from '../rule';
+import {
+  isValidateMap,
+  validateMapSync,
+  getValidateMapCompact,
+  zipValidateMapCompact,
+  ValidateMapCompact,
+  ValidateMap,
+} from '../validateMap';
 import { FLAG_CONDITION_TRUTHY, FLAG_CONDITION_FALSY } from '../rule/flags';
 
 describe('rule test', () => {
@@ -9,6 +14,17 @@ describe('rule test', () => {
     name: 'isRequired',
     conditionSync: ({ value }) => typeof value === 'number' || !!value,
     conditionAsync: ({ value }) => Promise.resolve(typeof value === 'number' || !!value),
+  });
+
+  const range = createSimpleRule<[number, number]>({
+    name: 'range',
+    conditionSync: ({ value, body: [minValue, maxValue] }) => {
+      if (typeof value !== 'number') return 'Значение не является числом';
+      if (typeof minValue !== 'number' || typeof maxValue !== 'number') return 'Некорректный диапозон';
+      return value >= minValue && value <= maxValue
+        ? true
+        : `Значение должно быть в диапозоне от ${minValue} до ${maxValue}`;
+    },
   });
 
   test('createRule empty', () => {
@@ -112,15 +128,43 @@ describe('rule test', () => {
     expect(isValidateMap([[rule], [[rule], {}]])).toBeFalsy();
   });
 
-  test('getRulesFromMap', () => {
+  test('zipValidateMapCompact', () => {
     const rule1 = createRule({ name: 'rule1' });
     const rule2 = createRule({ name: 'rule2' });
     const rule3 = createRule({ name: 'rule3' });
 
-    expect(getRulesFromMap([rule1, rule2, rule3])).toEqual([[[], [rule1, rule2, rule3]]]);
-    expect(getRulesFromMap([rule1, 123 as any])).toEqual([]);
+    const validateMapCompact: ValidateMapCompact = [
+      [
+        ['a', 'b'],
+        [rule1, rule2],
+      ],
+      [['a', 'b'], [rule3]],
+      [['a', 'k'], { $$ref: ['a', 'b'] }],
+      [['a', 'k'], [rule1]],
+    ];
+
+    const zipMap = zipValidateMapCompact(validateMapCompact);
+    expect(zipMap).toEqual([
+      [
+        ['a', 'b'],
+        [rule1, rule2, rule3],
+      ],
+      [
+        ['a', 'k'],
+        [[rule1], { $$ref: ['a', 'b'] }],
+      ],
+    ]);
+  });
+
+  test('getValidateMapCompact', () => {
+    const rule1 = createRule({ name: 'rule1' });
+    const rule2 = createRule({ name: 'rule2' });
+    const rule3 = createRule({ name: 'rule3' });
+
+    expect(getValidateMapCompact([rule1, rule2, rule3])).toEqual([[[], [rule1, rule2, rule3]]]);
+    expect(getValidateMapCompact([rule1, 123 as any])).toEqual([]);
     expect(
-      getRulesFromMap([
+      getValidateMapCompact([
         [rule1],
         { info: { age: [rule1, rule2], auth: [[rule1, rule3], { login: [rule3], password: [rule3] }] } },
       ]),
@@ -137,47 +181,154 @@ describe('rule test', () => {
       [['info', 'auth', 'login'], [rule3]],
       [['info', 'auth', 'password'], [rule3]],
     ]);
-  });
 
-  test('validateMap', () => {
-    const user = {
-      name: 'Ravil',
-      age: 24,
-      meta: {
-        emailVerified: true,
-        auth: {
-          login: 'berishev@fartix.com',
-          password: 'myPassword123',
-        },
+    const hardMap: ValidateMap<any> = {
+      x: { y: [rule1] },
+      a: {
+        b: [rule1],
+        c: [
+          [rule2],
+          {
+            d: [rule1],
+            k: { $$ref: ['a', 'c'] },
+            l: [[rule3], { $$ref: ['x', 'y'] }],
+          },
+        ],
       },
     };
-    const validateResult1 = validateMapSync(user, {
-      name: [isRequiredRule.revertSimple()],
-      age: [isRequiredRule],
-      meta: { auth: [isRequiredRule] },
-    });
-    expect(validateResult1.length).toBe(3);
-    expect(validateResult1[0].key).toEqual(['name']);
-    expect(validateResult1[1].key).toEqual(['age']);
-    expect(validateResult1[2].key).toEqual(['meta', 'auth']);
-    expect(validateResult1[0].rules.length).toBe(1);
-    expect(validateResult1[0].rules[0].isValid).toBe(false);
-    expect(validateResult1[0].rules[0].name).toBe(isRequiredRule.revertSimple().ruleName);
 
-    const validateResult2 = validateMapSync(
-      user,
+    const hardMapCompact: ValidateMapCompact = [
+      [['x', 'y'], [rule1]],
+      [['a', 'b'], [rule1]],
+      [['a', 'c'], [rule2]],
+      [['a', 'c', 'd'], [rule1]],
+      [['a', 'c', 'k'], { $$ref: ['a', 'c'] }],
+      [
+        ['a', 'c', 'l'],
+        [[rule3], { $$ref: ['x', 'y'] }],
+      ],
+    ];
+
+    expect(getValidateMapCompact(hardMap)).toEqual(hardMapCompact);
+  });
+
+  // test('validateMap', () => {
+  //   const user = {
+  //     name: 'Ravil',
+  //     age: 24,
+  //     meta: {
+  //       emailVerified: true,
+  //       auth: {
+  //         login: 'berishev@fartix.com',
+  //         password: 'myPassword123',
+  //       },
+  //     },
+  //   };
+  //   const validateResult1 = validateMapSync(user, {
+  //     name: [isRequiredRule.revertSimple()],
+  //     age: [isRequiredRule],
+  //     meta: { auth: [isRequiredRule] },
+  //   });
+  //   expect(validateResult1.length).toBe(3);
+  //   expect(validateResult1[0].key).toEqual(['name']);
+  //   expect(validateResult1[1].key).toEqual(['age']);
+  //   expect(validateResult1[2].key).toEqual(['meta', 'auth']);
+  //   expect(validateResult1[0].rules.length).toBe(1);
+  //   expect(validateResult1[0].rules[0].isValid).toBe(false);
+  //   expect(validateResult1[0].rules[0].name).toBe(isRequiredRule.revertSimple().ruleName);
+
+  //   const validateResult2 = validateMapSync(
+  //     user,
+  //     {
+  //       name: [isRequiredRule],
+  //       age: [isRequiredRule],
+  //       meta: { auth: [isRequiredRule, isRequiredRule.revertSimple()] },
+  //     },
+  //     true,
+  //   );
+
+  //   expect(validateResult2.length).toBe(1);
+  //   expect(validateResult2[0].key).toEqual(['meta', 'auth']);
+  //   expect(validateResult2[0].rules.length).toBe(1);
+  //   expect(validateResult2[0].rules[0].isValid).toBe(false);
+  //   expect(validateResult2[0].rules[0].name).toBe(isRequiredRule.revertSimple().ruleName);
+  // });
+
+  test('validateMap hard case1', () => {
+    interface IBook {
+      name: string;
+      pages: number;
+      author: IAuthor;
+    }
+    interface IAuthor {
+      firstname: string;
+      age: number;
+      lastBook: IBook;
+    }
+
+    const author1: IAuthor = {
+      firstname: 'Ravil',
+      age: 240,
+      lastBook: null,
+    };
+
+    const author2: IAuthor = {
+      firstname: 'Azat',
+      age: 23,
+      lastBook: null,
+    };
+
+    const book1: IBook = {
+      name: 'firstBook',
+      pages: 100,
+      author: author1,
+    };
+
+    const book2: IBook = {
+      name: 'secondBook',
+      pages: 1001,
+      author: author2,
+    };
+    author1.lastBook = book1;
+
+    const obj = {
+      book1,
+    };
+
+    const hardMap: ValidateMap<typeof obj> = {
+      book1: [
+        [isRequiredRule],
+        {
+          name: [isRequiredRule],
+          pages: [isRequiredRule, range(100, 1000)],
+          author: {
+            firstname: [isRequiredRule],
+            age: [range(10, 100)],
+            lastBook: { $$ref: ['book1'] },
+          },
+        },
+      ],
+    };
+
+    expect(validateMapSync(obj, hardMap)).toEqual([
+      { key: ['book1'], rules: [{ name: isRequiredRule.ruleName, isValid: true, errorText: null }] },
+      { key: ['book1', 'name'], rules: [{ name: isRequiredRule.ruleName, isValid: true, errorText: null }] },
       {
-        name: [isRequiredRule],
-        age: [isRequiredRule],
-        meta: { auth: [isRequiredRule, isRequiredRule.revertSimple()] },
+        key: ['book1', 'pages'],
+        rules: [
+          { name: isRequiredRule.ruleName, isValid: true, errorText: null },
+          { name: range.ruleName, isValid: true, errorText: null },
+        ],
       },
-      true,
-    );
-
-    expect(validateResult2.length).toBe(1);
-    expect(validateResult2[0].key).toEqual(['meta', 'auth']);
-    expect(validateResult2[0].rules.length).toBe(1);
-    expect(validateResult2[0].rules[0].isValid).toBe(false);
-    expect(validateResult2[0].rules[0].name).toBe(isRequiredRule.revertSimple().ruleName);
+      {
+        key: ['book1', 'author', 'firstname'],
+        rules: [{ name: isRequiredRule.ruleName, isValid: true, errorText: null }],
+      },
+      {
+        key: ['book1', 'author', 'age'],
+        rules: [{ name: range.ruleName, isValid: false, errorText: 'Значение должно быть в диапозоне от 10 до 100' }],
+      },
+      { key: ['book1', 'author', 'lastBook'], rules: [] },
+    ]);
   });
 });
