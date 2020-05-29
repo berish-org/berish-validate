@@ -2,8 +2,8 @@ import { IValidateRule, IRuleErrorTextResult } from '../rule';
 import * as globalMethodsImport from '../index';
 
 export interface IRulePlugin {
-  upgradeRuleBeforeInit?(rule: IValidateRule<any>): IValidateRule<any> | void;
   upgradeRuleAfterInit?(rule: IValidateRule<any>): IValidateRule<any> | void;
+  upgradeRuleAfterRegister?(rule: IValidateRule<any>): IValidateRule<any> | void;
   upgradeMethods?(
     globalMethods: typeof globalMethodsImport,
   ): typeof globalMethodsImport | { [key: string]: any } | void;

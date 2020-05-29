@@ -1,20 +1,37 @@
 import { IValidateRule } from './types';
 
-const rules: { [name: string]: IValidateRule<any> } = {};
+const registeredRules: { [name: string]: IValidateRule<any> } = {};
+let allRules: IValidateRule<any>[] = [];
 
 export function registerRule(rule: IValidateRule<any>) {
-  rules[rule.ruleName] = rule;
+  registeredRules[rule.ruleName] = rule;
 }
 
 export function unregisterRule(name: string) {
   const rule = getRegisteredRule(name);
-  if (rule) delete rules[name];
+  if (rule) delete registeredRules[name];
 }
 
 export function getRegisteredRule(name: string) {
-  return rules[name];
+  return registeredRules[name];
 }
 
 export function isRegisteredRule(name: string) {
   return getRegisteredRule(name) && true;
+}
+
+export function getRegisteredRules() {
+  return Object.values(registeredRules);
+}
+
+export function addRule(rule: IValidateRule<any>) {
+  if (allRules.indexOf(rule) === -1) allRules.push(rule);
+}
+
+export function removeRule(rule: IValidateRule<any>) {
+  allRules = allRules.filter(m => m !== rule);
+}
+
+export function getAllRules() {
+  return allRules;
 }

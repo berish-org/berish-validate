@@ -1,10 +1,10 @@
 import guid from 'berish-guid';
-import { registerRule, isRegisteredRule, getRegisteredRule } from './registrator';
+import { registerRule, isRegisteredRule, getRegisteredRule, addRule } from './registrator';
 import { IValidateRule, IRuleObject, IRuleObjectBody, IRuleObjectFlag, IRuleErrorTextResult } from './types';
 import { IRuleFlag } from './createRuleFlag';
 import { FLAG_CONDITION_TRUTHY, FLAG_CONDITION_FALSY } from './flags';
 import { isRuleFlag } from './isRuleFlag';
-import { useUpgradeRuleBeforeInit, callPlugin, useUpgradeRuleAfterInit } from '../pluginSystem';
+import { useUpgradeRuleAfterRegister, callPlugin, useUpgradeRuleAfterInit } from '../pluginSystem';
 
 export const SYMBOL_ERROR_TEXT_DEFAULT = Symbol('errorTextDefault');
 
@@ -24,10 +24,7 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
     const ruleName = params.name || `rule-${guid.generateId()}`;
     const defaultErrorText = `${ruleName}-error`;
 
-    const rule: IValidateRule<Body> = callPlugin<IValidateRule<Body>>(
-      ((...args: Body) => _createRule(params, args)) as any,
-      (plugin, rule) => useUpgradeRuleBeforeInit(plugin, rule),
-    );
+    const rule: IValidateRule<Body> = (...args: Body) => _createRule(params, args);
     rule.ruleName = ruleName;
     Object.defineProperty(rule, 'name', { value: rule.ruleName });
     Object.defineProperty(rule, 'isRegistered', {
@@ -97,9 +94,11 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
       return result;
     };
 
+    addRule(rule);
+
     return callPlugin(rule, (plugin, rule) => useUpgradeRuleAfterInit(plugin, rule));
   };
   const rule = _createRule(params, [] as any);
   registerRule(rule);
-  return rule;
+  return callPlugin(rule, (plugin, rule) => useUpgradeRuleAfterRegister(plugin, rule));
 }
