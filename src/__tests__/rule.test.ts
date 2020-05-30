@@ -1,4 +1,13 @@
-import { createRule, isRule, isRuleArray, isRuleTuple, isRuleMap, isRegisteredRule, createSimpleRule } from '../rule';
+import {
+  createRule,
+  isRule,
+  isRuleArray,
+  isRuleTuple,
+  isRuleMap,
+  isRegisteredRule,
+  createSimpleRule,
+  executeRuleSync,
+} from '../rule';
 import {
   isValidateMap,
   validateMapSync,
@@ -14,6 +23,7 @@ describe('rule test', () => {
     name: 'isRequired',
     conditionSync: ({ value }) => typeof value === 'number' || !!value,
     conditionAsync: ({ value }) => Promise.resolve(typeof value === 'number' || !!value),
+    errorText: () => 'Поле обязательно',
   });
 
   const range = createSimpleRule<[number, number]>({
@@ -52,7 +62,7 @@ describe('rule test', () => {
     expect(await isRequiredRule.conditionAsync({ target: null, key: null, value: '' })).toBe(FLAG_CONDITION_FALSY);
   });
 
-  test('createRule fabic', () => {
+  test('createRule fabric', () => {
     const maxRule = createRule<[number]>({
       name: 'max',
       conditionSync: ({ value, body }) => {
@@ -103,6 +113,19 @@ describe('rule test', () => {
     expect(isRequiredRevertWithTruthyRule.conditionSync({ target: null, key: null, value: 7 })).toBe(
       FLAG_CONDITION_FALSY,
     );
+  });
+
+  test('upgradeErrorText', () => {
+    const originalErrorText = executeRuleSync(isRequiredRule, { target: null, key: null, value: '' });
+
+    expect(originalErrorText).toBe('Поле обязательно');
+
+    const upgradedIsRequiredRule = isRequiredRule.upgradeErrorText(() => 'Property is required');
+    expect(upgradedIsRequiredRule === isRequiredRule).toBe(false);
+    expect(upgradedIsRequiredRule.ruleName === isRequiredRule.ruleName).toBe(true);
+
+    const upgradedErrorText = executeRuleSync(upgradedIsRequiredRule, { target: null, key: null, value: '' });
+    expect(upgradedErrorText).toBe('Property is required');
   });
 
   test('check types', () => {

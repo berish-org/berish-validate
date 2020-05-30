@@ -1,4 +1,5 @@
 import { IRuleFlag } from './createRuleFlag';
+import { SYMBOL_ERROR_TEXT_DEFAULT } from './createRule';
 
 export interface IRuleObject {
   target: any;
@@ -27,5 +28,10 @@ export interface IValidateRule<Body extends any[]> {
   revertError: (
     ruleName?: string,
     errorText?: (obj: IRuleObject & IRuleObjectBody<Body> & IRuleObjectFlag) => IRuleErrorTextResult,
+  ) => IValidateRule<Body>;
+  upgradeErrorText: (
+    callback: (
+      obj: IRuleObject & IRuleObjectBody<Body> & IRuleObjectFlag,
+    ) => IRuleErrorTextResult | typeof SYMBOL_ERROR_TEXT_DEFAULT,
   ) => IValidateRule<Body>;
 }

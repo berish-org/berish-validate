@@ -93,6 +93,7 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
       if (result === SYMBOL_ERROR_TEXT_DEFAULT) return defaultErrorText;
       return result;
     };
+    rule.upgradeErrorText = callback => _createRule({ ...params, errorText: callback }, body);
 
     addRule(rule);
 
