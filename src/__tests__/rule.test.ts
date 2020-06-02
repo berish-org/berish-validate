@@ -354,4 +354,18 @@ describe('rule test', () => {
       { key: ['book1', 'author', 'lastBook'], rules: [] },
     ]);
   });
+
+  test('validate primitives', () => {
+    const form = { name: '' };
+    const result1 = validateMapSync(form, { name: [isRequiredRule] }, true);
+
+    expect(result1).toEqual([
+      { key: ['name'], rules: [{ name: isRequiredRule.name, isValid: false, errorText: 'Поле обязательно' }] },
+    ]);
+
+    const result2 = validateMapSync(form.name, [isRequiredRule], true);
+    expect(result2).toEqual([
+      { key: [], rules: [{ name: isRequiredRule.name, isValid: false, errorText: 'Поле обязательно' }] },
+    ]);
+  });
 });
