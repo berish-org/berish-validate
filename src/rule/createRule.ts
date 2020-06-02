@@ -14,7 +14,7 @@ export interface ICreateRuleParams<Body extends any[]> {
   conditionAsync?: (obj: IRuleObject & IRuleObjectBody<Body>) => boolean | IRuleFlag | Promise<boolean | IRuleFlag>;
   errorText?: (
     obj: IRuleObject & IRuleObjectBody<Body> & IRuleObjectFlag,
-  ) => IRuleErrorTextResult | typeof SYMBOL_ERROR_TEXT_DEFAULT;
+  ) => IRuleErrorTextResult | typeof SYMBOL_ERROR_TEXT_DEFAULT | void;
 }
 
 export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>): IValidateRule<Body> {
@@ -88,8 +88,7 @@ export function createRule<Body extends any[]>(params: ICreateRuleParams<Body>):
     };
     rule.errorText = obj => {
       if (!params.errorText) return defaultErrorText;
-      const result = params.errorText({ ...obj, body });
-      if (!result) return defaultErrorText;
+      const result = params.errorText({ ...obj, body }) || SYMBOL_ERROR_TEXT_DEFAULT;
       if (result === SYMBOL_ERROR_TEXT_DEFAULT) return defaultErrorText;
       return result;
     };

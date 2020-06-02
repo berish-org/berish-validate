@@ -6,10 +6,10 @@ import { FLAG_CONDITION_FALSY, FLAG_CONDITION_TRUTHY } from './flags';
 
 export interface ICreateSimpleRuleParams<Body extends any[]> {
   name?: string;
-  conditionSync?: (obj: IRuleObject & IRuleObjectBody<Body>) => boolean | IRuleErrorTextResult;
+  conditionSync?: (obj: IRuleObject & IRuleObjectBody<Body>) => boolean | IRuleErrorTextResult | void;
   conditionAsync?: (
     obj: IRuleObject & IRuleObjectBody<Body>,
-  ) => boolean | IRuleErrorTextResult | Promise<boolean | IRuleErrorTextResult>;
+  ) => boolean | IRuleErrorTextResult | void | Promise<boolean | IRuleErrorTextResult | void>;
 }
 
 export function createSimpleRule<Body extends any[]>(params: ICreateSimpleRuleParams<Body>): IValidateRule<Body> {
